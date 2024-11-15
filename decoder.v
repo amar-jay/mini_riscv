@@ -20,32 +20,17 @@ module instruction_decoder (
 );
 
   reg [7:0] mem[65536];  // 64bit memory
-
-  // Internal signals for better timing
-  reg [31:0] imm;
-  reg alt;
-  reg [7:0] result;
-
-  // Pre-decode logic to improve timing
-  wire [6:0] opcode_wire = instruction[6:0];
-  wire [4:0] rd_wire = instruction[11:7];
-  wire [2:0] funct3_wire = instruction[14:12];
-  wire [4:0] rs1_wire = instruction[19:15];
-  wire [4:0] rs2_wire = instruction[24:20];
-  wire [6:0] funct7_wire = instruction[31:25];
-
-  always @(posedge clk) begin
-    opcode <= opcode_wire;
+  always @(instruction) begin
+    opcode = instruction[6:0];
     case (opcode)
       6'b0110011: begin
         _type = 3'b001;  // R
-        rd <= rd_wire;
-        funct3 <= funct3_wire;
-        rs1 <= rs1_wire;
-        rs2 <= rs2_wire;
-        func7 <= funct7_wire;
-        result = alu_fn(funct3, rs1, rs2, func7 == 6'h20);
-        mem[{rd_wire, 3'b000}] <= result;
+        rd = instruction[11:7];
+        funct3 = instruction[14:12];
+        rs1 = instruction[19:15];
+        rs2 = instruction[24:20];
+        func7 = instruction[31:25];
+        alu(clk, funct3, rs1, rs2, func7 == 6'h20, mem[rd]);
       end
 
       6'b0010011: begin
